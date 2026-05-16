@@ -5,7 +5,7 @@ import "./App.css";
 function App() {
 
   // API BASE URL
-  const API = "https://ese-project-rwau.onrender.com/api/candidates";
+  const API = import.meta.env.VITE_API_URL;
 
   // FORM DATA
   const [formData, setFormData] = useState({
