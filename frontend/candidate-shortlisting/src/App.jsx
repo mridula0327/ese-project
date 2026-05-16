@@ -34,7 +34,7 @@ function App() {
     try {
 
       const response = await axios.get(
-        "http://localhost:5000/api/candidates"
+        "https://ese-project-rwau.onrender.com"
       );
 
       setCandidates(response.data);
@@ -87,7 +87,7 @@ function App() {
       };
 
       await axios.post(
-        "http://localhost:5000/api/candidates",
+        "https://ese-project-rwau.onrender.com",
         candidateData
       );
 
@@ -119,7 +119,7 @@ function App() {
     try {
 
       const response = await axios.post(
-        "http://localhost:5000/api/match",
+        "https://ese-project-rwau.onrender.com",
         {
           requiredSkills: matchData.requiredSkills.split(","),
           minExperience: Number(matchData.minExperience),
@@ -142,7 +142,7 @@ function App() {
   try {
 
     const response = await axios.post(
-      "http://localhost:5000/api/ai/shortlist",
+      "https://ese-project-rwau.onrender.com",
       {
         requiredSkills: matchData.requiredSkills.split(","),
         minExperience: Number(matchData.minExperience),
@@ -169,7 +169,7 @@ const deleteCandidate = async (id) => {
   try {
 
     await axios.delete(
-      `http://localhost:5000/api/candidates/${id}`
+      `https://ese-project-rwau.onrender.com/${id}`
     );
 
     alert("Candidate Deleted");
