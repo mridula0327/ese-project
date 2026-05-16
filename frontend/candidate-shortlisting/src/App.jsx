@@ -35,7 +35,7 @@ function App() {
     try {
 
       const response = await axios.get(
-        "https://ese-project-rwau.onrender.com"
+        "https://ese-project-rwau.onrender.com/api/candidates"
       );
 
       setCandidates(response.data);
@@ -49,27 +49,7 @@ function App() {
 
   // LOAD DATA
   useEffect(() => {
-    let ignore = false;
-
-    const loadCandidates = async () => {
-      try {
-        const response = await axios.get(
-          "https://ese-project-rwau.onrender.com"
-        );
-
-        if (!ignore) {
-          setCandidates(response.data);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    loadCandidates();
-
-    return () => {
-      ignore = true;
-    };
+    fetchCandidates();
   }, []);
 
 
@@ -108,7 +88,7 @@ function App() {
       };
 
       await axios.post(
-        "https://ese-project-rwau.onrender.com",
+        "https://ese-project-rwau.onrender.com/api/candidates/add",
         candidateData
       );
 
@@ -140,7 +120,7 @@ function App() {
     try {
 
       const response = await axios.post(
-        "https://ese-project-rwau.onrender.com",
+        "https://ese-project-rwau.onrender.com/api/candidates/match",
         {
           requiredSkills: matchData.requiredSkills.split(","),
           minExperience: Number(matchData.minExperience),
@@ -160,263 +140,444 @@ function App() {
   // AI SHORTLIST
   const getAIShortlist = async () => {
 
-  try {
+    try {
 
-    const response = await axios.post(
-      "https://ese-project-rwau.onrender.com",
-      {
-        requiredSkills: matchData.requiredSkills.split(","),
-        minExperience: Number(matchData.minExperience),
-      }
-    );
+      const response = await axios.post(
+        "https://ese-project-rwau.onrender.com/api/candidates/ai-shortlist",
+        {
+          requiredSkills: matchData.requiredSkills.split(","),
+          minExperience: Number(matchData.minExperience),
+        }
+      );
 
-    const aiText =
-      response.data.choices[0].message.content;
+      const aiText =
+        response.data.choices[0].message.content;
 
-    setAiResponse(aiText);
+      setAiResponse(aiText);
 
-  } catch (error) {
+    } catch (error) {
 
-    console.log(error);
+      console.log(error);
 
-    alert("AI Recommendation Failed");
-  }
-};
+      alert("AI Recommendation Failed");
+    }
+  };
 
 
-// DELETE CANDIDATE
-const deleteCandidate = async (id) => {
 
-  try {
+  // DELETE CANDIDATE
+  const deleteCandidate = async (id) => {
 
-    await axios.delete(
-      `https://ese-project-rwau.onrender.com/${id}`
-    );
+    try {
 
-    alert("Candidate Deleted");
+      await axios.delete(
+        `https://ese-project-rwau.onrender.com/api/candidates/${id}`
+      );
 
-    fetchCandidates();
+      alert("Candidate Deleted");
 
-  } catch (error) {
+      fetchCandidates();
 
-    console.log(error);
+    } catch (error) {
 
-    alert("Delete Failed");
-  }
-};
+      console.log(error);
+
+      alert("Delete Failed");
+    }
+  };
 
 
 
   return (
     <div className="app-shell">
+
+      {/* TOPBAR */}
       <header className="topbar">
+
         <div className="topbar-inner">
+
           <div className="brand">
-            <span className="brand-mark">CS</span>
+
+            <span className="brand-mark">
+              CS
+            </span>
+
             <div>
               <h1>Candidate Shortlisting System</h1>
-              <p>Manage candidates, match skills, and review AI-assisted recommendations.</p>
+
+              <p>
+                Manage candidates, match skills, and review AI-assisted recommendations.
+              </p>
             </div>
+
           </div>
 
-          <span className="topbar-pill">Recruitment Dashboard</span>
+          <span className="topbar-pill">
+            Recruitment Dashboard
+          </span>
+
         </div>
+
       </header>
 
+
+
+      {/* MAIN */}
       <main className="dashboard">
-        <section className="stats-strip" aria-label="Candidate summary">
+
+        {/* STATS */}
+        <section className="stats-strip">
+
           <div className="stat-card">
             <span>Total Candidates</span>
             <strong>{candidates.length}</strong>
           </div>
+
           <div className="stat-card">
             <span>Current Matches</span>
             <strong>{matchedCandidates.length}</strong>
           </div>
+
           <div className="stat-card">
             <span>Minimum Experience</span>
             <strong>{matchData.minExperience || 0}y</strong>
           </div>
+
         </section>
 
+
+
+        {/* TOP GRID */}
         <section className="grid-layout">
+
+          {/* ADD PANEL */}
           <div className="panel">
+
             <div className="panel-header">
+
               <div className="panel-title">
+
                 <h2>Add Candidate</h2>
-                <p>Create a clean candidate profile for the shortlist pool.</p>
+
+                <p>
+                  Create a clean candidate profile for the shortlist pool.
+                </p>
+
               </div>
+
             </div>
 
+
+
             <form className="panel-body" onSubmit={addCandidate}>
+
               <div className="form-grid">
+
                 <div className="form-field">
-                  <label htmlFor="name">Name</label>
+
+                  <label>Name</label>
+
                   <input
-                    id="name"
                     type="text"
                     name="name"
                     placeholder="Aarav Sharma"
                     value={formData.name}
                     onChange={handleChange}
                   />
+
                 </div>
 
+
+
                 <div className="form-field">
-                  <label htmlFor="email">Email</label>
+
+                  <label>Email</label>
+
                   <input
-                    id="email"
                     type="email"
                     name="email"
                     placeholder="aarav@example.com"
                     value={formData.email}
                     onChange={handleChange}
                   />
+
                 </div>
 
+
+
                 <div className="form-field">
-                  <label htmlFor="skills">Skills</label>
+
+                  <label>Skills</label>
+
                   <input
-                    id="skills"
                     type="text"
                     name="skills"
                     placeholder="React, Node.js, MongoDB"
                     value={formData.skills}
                     onChange={handleChange}
                   />
+
                 </div>
 
+
+
                 <div className="form-field">
-                  <label htmlFor="experience">Experience</label>
+
+                  <label>Experience</label>
+
                   <input
-                    id="experience"
                     type="number"
                     name="experience"
                     placeholder="3"
                     value={formData.experience}
                     onChange={handleChange}
                   />
+
                 </div>
 
+
+
                 <div className="form-field full">
-                  <label htmlFor="bio">Candidate Bio</label>
+
+                  <label>Candidate Bio</label>
+
                   <textarea
-                    id="bio"
                     name="bio"
-                    placeholder="Briefly summarize the candidate's background, projects, and strengths."
                     rows="5"
+                    placeholder="Briefly summarize the candidate background."
                     value={formData.bio}
                     onChange={handleChange}
                   ></textarea>
+
                 </div>
+
               </div>
+
+
 
               <button className="btn btn-primary" type="submit">
                 Add Candidate
               </button>
+
             </form>
+
           </div>
 
+
+
+          {/* MATCH PANEL */}
           <div className="panel">
+
             <div className="panel-header">
+
               <div className="panel-title">
+
                 <h2>Match Candidates</h2>
-                <p>Filter profiles against required skills and experience.</p>
+
+                <p>
+                  Filter profiles against required skills and experience.
+                </p>
+
               </div>
+
+
 
               <div className="actions">
-                <button onClick={matchCandidates} className="btn btn-secondary" type="button">
+
+                <button
+                  onClick={matchCandidates}
+                  className="btn btn-secondary"
+                  type="button"
+                >
                   Match
                 </button>
-                <button onClick={getAIShortlist} className="btn btn-accent" type="button">
+
+                <button
+                  onClick={getAIShortlist}
+                  className="btn btn-accent"
+                  type="button"
+                >
                   AI Shortlist
                 </button>
+
               </div>
+
             </div>
 
+
+
             <div className="panel-body">
+
               <div className="match-controls">
+
                 <div className="form-field">
-                  <label htmlFor="requiredSkills">Required Skills</label>
+
+                  <label>Required Skills</label>
+
                   <input
-                    id="requiredSkills"
                     type="text"
                     name="requiredSkills"
                     placeholder="React, Express, SQL"
                     value={matchData.requiredSkills}
                     onChange={handleMatchChange}
                   />
+
                 </div>
 
+
+
                 <div className="form-field">
-                  <label htmlFor="minExperience">Minimum Experience</label>
+
+                  <label>Minimum Experience</label>
+
                   <input
-                    id="minExperience"
                     type="number"
                     name="minExperience"
                     placeholder="2"
                     value={matchData.minExperience}
                     onChange={handleMatchChange}
                   />
+
                 </div>
+
               </div>
 
+
+
+              {/* MATCH RESULTS */}
               <div className="scroll-area">
+
                 {matchedCandidates.length === 0 ? (
-                  <p className="empty-state">Matched candidates will appear here.</p>
+
+                  <p className="empty-state">
+                    Matched candidates will appear here.
+                  </p>
+
                 ) : (
+
                   <div className="result-list">
+
                     {matchedCandidates.map((candidate, index) => (
+
                       <article key={index} className="result-card">
+
                         <div className="result-head">
+
                           <div>
-                            <h3 className="candidate-name">{candidate.name}</h3>
-                            <p className="candidate-email">{candidate.email}</p>
+
+                            <h3 className="candidate-name">
+                              {candidate.name}
+                            </h3>
+
+                            <p className="candidate-email">
+                              {candidate.email}
+                            </p>
+
                           </div>
-                          <span className="score">{candidate.matchScore}</span>
+
+                          <span className="score">
+                            {candidate.matchScore}
+                          </span>
+
                         </div>
 
+
+
                         <div className="tag-row">
+
                           {(candidate.matchedSkills || []).map((skill, idx) => (
+
                             <span key={idx} className="tag">
                               {skill}
                             </span>
+
                           ))}
+
                         </div>
+
                       </article>
+
                     ))}
+
                   </div>
+
                 )}
+
               </div>
+
             </div>
+
           </div>
+
         </section>
 
+
+
+        {/* BOTTOM GRID */}
         <section className="grid-layout">
+
+          {/* ALL CANDIDATES */}
           <div className="panel">
+
             <div className="panel-header">
+
               <div className="panel-title">
+
                 <h2>All Candidates</h2>
-                <p>Review every profile currently available for shortlisting.</p>
+
+                <p>
+                  Review every profile currently available for shortlisting.
+                </p>
+
               </div>
+
             </div>
 
+
+
             <div className="panel-body">
+
               <div className="scroll-area tall">
+
                 {candidates.length === 0 ? (
-                  <p className="empty-state">No candidates found yet.</p>
+
+                  <p className="empty-state">
+                    No candidates found yet.
+                  </p>
+
                 ) : (
+
                   <div className="card-grid">
+
                     {candidates.map((candidate) => (
-                      <article key={candidate._id} className="candidate-card">
+
+                      <article
+                        key={candidate._id}
+                        className="candidate-card"
+                      >
+
                         <div className="card-head">
+
                           <div>
-                            <h3 className="candidate-name">{candidate.name}</h3>
-                            <p className="candidate-email">{candidate.email}</p>
+
+                            <h3 className="candidate-name">
+                              {candidate.name}
+                            </h3>
+
+                            <p className="candidate-email">
+                              {candidate.email}
+                            </p>
+
                           </div>
 
+
+
                           <div className="meta-actions">
-                            <span className="tag experience">{candidate.experience} yrs</span>
+
+                            <span className="tag experience">
+                              {candidate.experience} yrs
+                            </span>
+
                             <button
                               onClick={() => deleteCandidate(candidate._id)}
                               className="btn btn-danger"
@@ -424,44 +585,90 @@ const deleteCandidate = async (id) => {
                             >
                               Delete
                             </button>
+
                           </div>
+
                         </div>
 
-                        <p className="candidate-bio">{candidate.bio}</p>
+
+
+                        <p className="candidate-bio">
+                          {candidate.bio}
+                        </p>
+
+
 
                         <div className="tag-row">
+
                           {(candidate.skills || []).map((skill, index) => (
-                            <span key={index} className="tag skill">
+
+                            <span
+                              key={index}
+                              className="tag skill"
+                            >
                               {skill}
                             </span>
+
                           ))}
+
                         </div>
+
                       </article>
+
                     ))}
+
                   </div>
+
                 )}
+
               </div>
+
             </div>
+
           </div>
 
+
+
+          {/* AI PANEL */}
           <div className="panel">
+
             <div className="panel-header">
+
               <div className="panel-title">
+
                 <h2>AI Recommendation</h2>
-                <p>Generated shortlist notes based on the current match criteria.</p>
+
+                <p>
+                  Generated shortlist notes based on current match criteria.
+                </p>
+
               </div>
+
             </div>
+
+
 
             <div className="panel-body">
+
               <div className="ai-panel">
+
                 <pre className="ai-copy">
-                  {aiResponse || "AI recommendation will appear here after you run AI Shortlist."}
+
+                  {aiResponse ||
+                    "AI recommendation will appear here after you run AI Shortlist."}
+
                 </pre>
+
               </div>
+
             </div>
+
           </div>
+
         </section>
+
       </main>
+
     </div>
   );
 }
