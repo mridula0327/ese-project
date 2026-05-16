@@ -4,6 +4,9 @@ import "./App.css";
 
 function App() {
 
+  // API BASE URL
+  const API = "https://ese-project-rwau.onrender.com/api/candidates";
+
   // FORM DATA
   const [formData, setFormData] = useState({
     name: "",
@@ -13,7 +16,7 @@ function App() {
     bio: "",
   });
 
-  // ALL CANDIDATES
+  // CANDIDATES
   const [candidates, setCandidates] = useState([]);
 
   // MATCH DATA
@@ -22,7 +25,7 @@ function App() {
     minExperience: "",
   });
 
-  // MATCHED CANDIDATES
+  // MATCHED
   const [matchedCandidates, setMatchedCandidates] = useState([]);
 
   // AI RESPONSE
@@ -32,31 +35,34 @@ function App() {
 
   // FETCH CANDIDATES
   const fetchCandidates = async () => {
+
     try {
 
-      const response = await axios.get(
-        "https://ese-project-rwau.onrender.com/api/candidates"
-      );
+      const response = await axios.get(API);
 
       setCandidates(response.data);
 
     } catch (error) {
+
       console.log(error);
     }
   };
 
 
 
-  // LOAD DATA
+  // LOAD
   useEffect(() => {
+
     fetchCandidates();
+
   }, []);
 
 
 
 
-  // HANDLE ADD FORM
+  // HANDLE FORM
   const handleChange = (e) => {
+
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -65,8 +71,9 @@ function App() {
 
 
 
-  // HANDLE MATCH FORM
+  // HANDLE MATCH
   const handleMatchChange = (e) => {
+
     setMatchData({
       ...matchData,
       [e.target.name]: e.target.value,
@@ -87,12 +94,9 @@ function App() {
         skills: formData.skills.split(","),
       };
 
-      await axios.post(
-        "https://ese-project-rwau.onrender.com/api/candidates/add",
-        candidateData
-      );
+      await axios.post(API, candidateData);
 
-      alert("Candidate Added Successfully");
+      alert("Candidate Added");
 
       setFormData({
         name: "",
@@ -115,64 +119,66 @@ function App() {
 
 
   // MATCH CANDIDATES
-  const matchCandidates = async () => {
+  const matchCandidates = () => {
 
-    try {
+    const filtered = candidates.filter((candidate) => {
 
-      const response = await axios.post(
-        "https://ese-project-rwau.onrender.com/api/candidates/match",
-        {
-          requiredSkills: matchData.requiredSkills.split(","),
-          minExperience: Number(matchData.minExperience),
-        }
-      );
+      const skillMatch =
+        matchData.requiredSkills === ""
+          ? true
+          : matchData.requiredSkills
+              .toLowerCase()
+              .split(",")
+              .some((skill) =>
+                candidate.skills.join(" ").toLowerCase().includes(skill.trim())
+              );
 
-      setMatchedCandidates(response.data);
+      const experienceMatch =
+        Number(candidate.experience) >=
+        Number(matchData.minExperience || 0);
 
-    } catch (error) {
+      return skillMatch && experienceMatch;
+    });
 
-      console.log(error);
-    }
+    setMatchedCandidates(filtered);
   };
 
 
 
   // AI SHORTLIST
-  const getAIShortlist = async () => {
+  const getAIShortlist = () => {
 
-    try {
+    if (matchedCandidates.length === 0) {
 
-      const response = await axios.post(
-        "https://ese-project-rwau.onrender.com/api/candidates/ai-shortlist",
-        {
-          requiredSkills: matchData.requiredSkills.split(","),
-          minExperience: Number(matchData.minExperience),
-        }
+      setAiResponse(
+        "No matched candidates found. Please run candidate matching first."
       );
 
-      const aiText =
-        response.data.choices[0].message.content;
-
-      setAiResponse(aiText);
-
-    } catch (error) {
-
-      console.log(error);
-
-      alert("AI Recommendation Failed");
+      return;
     }
+
+    const text = matchedCandidates
+      .map(
+        (candidate, index) =>
+          `${index + 1}. ${candidate.name}
+Skills: ${candidate.skills.join(", ")}
+Experience: ${candidate.experience} years
+Bio: ${candidate.bio}
+`
+      )
+      .join("\n");
+
+    setAiResponse(text);
   };
 
 
 
-  // DELETE CANDIDATE
+  // DELETE
   const deleteCandidate = async (id) => {
 
     try {
 
-      await axios.delete(
-        `https://ese-project-rwau.onrender.com/api/candidates/${id}`
-      );
+      await axios.delete(`${API}/${id}`);
 
       alert("Candidate Deleted");
 
@@ -203,11 +209,13 @@ function App() {
             </span>
 
             <div>
+
               <h1>Candidate Shortlisting System</h1>
 
               <p>
-                Manage candidates, match skills, and review AI-assisted recommendations.
+                Manage candidates, match skills, and review AI recommendations.
               </p>
+
             </div>
 
           </div>
@@ -234,7 +242,7 @@ function App() {
           </div>
 
           <div className="stat-card">
-            <span>Current Matches</span>
+            <span>Matched Candidates</span>
             <strong>{matchedCandidates.length}</strong>
           </div>
 
@@ -260,7 +268,7 @@ function App() {
                 <h2>Add Candidate</h2>
 
                 <p>
-                  Create a clean candidate profile for the shortlist pool.
+                  Add professional candidate profiles.
                 </p>
 
               </div>
@@ -280,9 +288,9 @@ function App() {
                   <input
                     type="text"
                     name="name"
-                    placeholder="Aarav Sharma"
                     value={formData.name}
                     onChange={handleChange}
+                    placeholder="Rahul Sharma"
                   />
 
                 </div>
@@ -296,9 +304,9 @@ function App() {
                   <input
                     type="email"
                     name="email"
-                    placeholder="aarav@example.com"
                     value={formData.email}
                     onChange={handleChange}
+                    placeholder="rahul@gmail.com"
                   />
 
                 </div>
@@ -312,9 +320,9 @@ function App() {
                   <input
                     type="text"
                     name="skills"
-                    placeholder="React, Node.js, MongoDB"
                     value={formData.skills}
                     onChange={handleChange}
+                    placeholder="React, Node.js"
                   />
 
                 </div>
@@ -328,9 +336,9 @@ function App() {
                   <input
                     type="number"
                     name="experience"
-                    placeholder="3"
                     value={formData.experience}
                     onChange={handleChange}
+                    placeholder="2"
                   />
 
                 </div>
@@ -339,14 +347,14 @@ function App() {
 
                 <div className="form-field full">
 
-                  <label>Candidate Bio</label>
+                  <label>Bio</label>
 
                   <textarea
                     name="bio"
                     rows="5"
-                    placeholder="Briefly summarize the candidate background."
                     value={formData.bio}
                     onChange={handleChange}
+                    placeholder="Candidate background..."
                   ></textarea>
 
                 </div>
@@ -355,7 +363,7 @@ function App() {
 
 
 
-              <button className="btn btn-primary" type="submit">
+              <button type="submit" className="btn btn-primary">
                 Add Candidate
               </button>
 
@@ -375,7 +383,7 @@ function App() {
                 <h2>Match Candidates</h2>
 
                 <p>
-                  Filter profiles against required skills and experience.
+                  Match profiles according to required skills.
                 </p>
 
               </div>
@@ -385,17 +393,17 @@ function App() {
               <div className="actions">
 
                 <button
-                  onClick={matchCandidates}
                   className="btn btn-secondary"
                   type="button"
+                  onClick={matchCandidates}
                 >
                   Match
                 </button>
 
                 <button
-                  onClick={getAIShortlist}
                   className="btn btn-accent"
                   type="button"
+                  onClick={getAIShortlist}
                 >
                   AI Shortlist
                 </button>
@@ -417,9 +425,9 @@ function App() {
                   <input
                     type="text"
                     name="requiredSkills"
-                    placeholder="React, Express, SQL"
                     value={matchData.requiredSkills}
                     onChange={handleMatchChange}
+                    placeholder="React, MongoDB"
                   />
 
                 </div>
@@ -433,9 +441,9 @@ function App() {
                   <input
                     type="number"
                     name="minExperience"
-                    placeholder="2"
                     value={matchData.minExperience}
                     onChange={handleMatchChange}
+                    placeholder="2"
                   />
 
                 </div>
@@ -444,22 +452,24 @@ function App() {
 
 
 
-              {/* MATCH RESULTS */}
               <div className="scroll-area">
 
                 {matchedCandidates.length === 0 ? (
 
                   <p className="empty-state">
-                    Matched candidates will appear here.
+                    No matched candidates.
                   </p>
 
                 ) : (
 
-                  <div className="result-list">
+                  <div className="card-grid">
 
-                    {matchedCandidates.map((candidate, index) => (
+                    {matchedCandidates.map((candidate) => (
 
-                      <article key={index} className="result-card">
+                      <div
+                        key={candidate._id}
+                        className="result-card"
+                      >
 
                         <div className="result-head">
 
@@ -475,19 +485,18 @@ function App() {
 
                           </div>
 
-                          <span className="score">
-                            {candidate.matchScore}
-                          </span>
-
                         </div>
 
 
 
                         <div className="tag-row">
 
-                          {(candidate.matchedSkills || []).map((skill, idx) => (
+                          {candidate.skills.map((skill, index) => (
 
-                            <span key={idx} className="tag">
+                            <span
+                              key={index}
+                              className="tag skill"
+                            >
                               {skill}
                             </span>
 
@@ -495,7 +504,7 @@ function App() {
 
                         </div>
 
-                      </article>
+                      </div>
 
                     ))}
 
@@ -513,7 +522,7 @@ function App() {
 
 
 
-        {/* BOTTOM GRID */}
+        {/* BOTTOM */}
         <section className="grid-layout">
 
           {/* ALL CANDIDATES */}
@@ -526,7 +535,7 @@ function App() {
                 <h2>All Candidates</h2>
 
                 <p>
-                  Review every profile currently available for shortlisting.
+                  Complete candidate list.
                 </p>
 
               </div>
@@ -539,87 +548,79 @@ function App() {
 
               <div className="scroll-area tall">
 
-                {candidates.length === 0 ? (
+                <div className="card-grid">
 
-                  <p className="empty-state">
-                    No candidates found yet.
-                  </p>
+                  {candidates.map((candidate) => (
 
-                ) : (
+                    <div
+                      key={candidate._id}
+                      className="candidate-card"
+                    >
 
-                  <div className="card-grid">
+                      <div className="card-head">
 
-                    {candidates.map((candidate) => (
+                        <div>
 
-                      <article
-                        key={candidate._id}
-                        className="candidate-card"
-                      >
+                          <h3 className="candidate-name">
+                            {candidate.name}
+                          </h3>
 
-                        <div className="card-head">
-
-                          <div>
-
-                            <h3 className="candidate-name">
-                              {candidate.name}
-                            </h3>
-
-                            <p className="candidate-email">
-                              {candidate.email}
-                            </p>
-
-                          </div>
-
-
-
-                          <div className="meta-actions">
-
-                            <span className="tag experience">
-                              {candidate.experience} yrs
-                            </span>
-
-                            <button
-                              onClick={() => deleteCandidate(candidate._id)}
-                              className="btn btn-danger"
-                              type="button"
-                            >
-                              Delete
-                            </button>
-
-                          </div>
+                          <p className="candidate-email">
+                            {candidate.email}
+                          </p>
 
                         </div>
 
 
 
-                        <p className="candidate-bio">
-                          {candidate.bio}
-                        </p>
+                        <div className="meta-actions">
 
+                          <span className="tag experience">
+                            {candidate.experience} yrs
+                          </span>
 
-
-                        <div className="tag-row">
-
-                          {(candidate.skills || []).map((skill, index) => (
-
-                            <span
-                              key={index}
-                              className="tag skill"
-                            >
-                              {skill}
-                            </span>
-
-                          ))}
+                          <button
+                            className="btn btn-danger"
+                            type="button"
+                            onClick={() =>
+                              deleteCandidate(candidate._id)
+                            }
+                          >
+                            Delete
+                          </button>
 
                         </div>
 
-                      </article>
+                      </div>
 
-                    ))}
 
-                  </div>
 
-                )}
+                      <p className="candidate-bio">
+                        {candidate.bio}
+                      </p>
+
+
+
+                      <div className="tag-row">
+
+                        {candidate.skills.map((skill, index) => (
+
+                          <span
+                            key={index}
+                            className="tag skill"
+                          >
+                            {skill}
+                          </span>
+
+                        ))}
+
+                      </div>
+
+                    </div>
+
+                  ))}
+
+                </div>
 
               </div>
 
@@ -629,7 +630,7 @@ function App() {
 
 
 
-          {/* AI PANEL */}
+          {/* AI */}
           <div className="panel">
 
             <div className="panel-header">
@@ -639,7 +640,7 @@ function App() {
                 <h2>AI Recommendation</h2>
 
                 <p>
-                  Generated shortlist notes based on current match criteria.
+                  AI generated shortlist.
                 </p>
 
               </div>
@@ -655,7 +656,7 @@ function App() {
                 <pre className="ai-copy">
 
                   {aiResponse ||
-                    "AI recommendation will appear here after you run AI Shortlist."}
+                    "AI recommendation will appear here."}
 
                 </pre>
 
