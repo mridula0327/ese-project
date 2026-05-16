@@ -106,7 +106,9 @@ function App() {
         bio: "",
       });
 
-      fetchCandidates();
+      setTimeout(() => {
+  fetchCandidates();
+}, 1500);
 
     } catch (error) {
 
