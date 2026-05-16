@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import "./App.css";
 
 function App() {
 
@@ -48,7 +49,27 @@ function App() {
 
   // LOAD DATA
   useEffect(() => {
-    fetchCandidates();
+    let ignore = false;
+
+    const loadCandidates = async () => {
+      try {
+        const response = await axios.get(
+          "https://ese-project-rwau.onrender.com"
+        );
+
+        if (!ignore) {
+          setCandidates(response.data);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    loadCandidates();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
 
@@ -187,306 +208,260 @@ const deleteCandidate = async (id) => {
 
 
   return (
-
-    <div className="min-h-screen bg-gray-100">
-
-      {/* NAVBAR */}
-      <nav className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-5 shadow-lg">
-
-        <h1 className="text-4xl font-bold tracking-wide">
-          Candidate Shortlisting System
-        </h1>
-
-      </nav>
-
-
-
-      {/* TOP SECTION */}
-      <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* ADD CANDIDATE */}
-        <div className="bg-white rounded-3xl shadow-md p-6">
-
-          <h2 className="text-3xl font-bold text-blue-700 mb-6">
-            Add Candidate
-          </h2>
-
-          <form className="space-y-4" onSubmit={addCandidate}>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              <input
-                type="text"
-                name="name"
-                placeholder="Enter Name"
-                value={formData.name}
-                onChange={handleChange}
-                className="border border-gray-300 p-4 rounded-xl outline-none"
-              />
-
-              <input
-                type="email"
-                name="email"
-                placeholder="Enter Email"
-                value={formData.email}
-                onChange={handleChange}
-                className="border border-gray-300 p-4 rounded-xl outline-none"
-              />
-
+    <div className="app-shell">
+      <header className="topbar">
+        <div className="topbar-inner">
+          <div className="brand">
+            <span className="brand-mark">CS</span>
+            <div>
+              <h1>Candidate Shortlisting System</h1>
+              <p>Manage candidates, match skills, and review AI-assisted recommendations.</p>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              <input
-                type="text"
-                name="skills"
-                placeholder="Skills (React, Node.js)"
-                value={formData.skills}
-                onChange={handleChange}
-                className="border border-gray-300 p-4 rounded-xl outline-none"
-              />
-
-              <input
-                type="number"
-                name="experience"
-                placeholder="Experience"
-                value={formData.experience}
-                onChange={handleChange}
-                className="border border-gray-300 p-4 rounded-xl outline-none"
-              />
-
-            </div>
-
-            <textarea
-              name="bio"
-              placeholder="Candidate Bio"
-              rows="5"
-              value={formData.bio}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-4 rounded-xl outline-none"
-            ></textarea>
-
-            <button
-              className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white w-full py-4 rounded-xl text-lg font-semibold hover:opacity-90 transition"
-            >
-              Add Candidate
-            </button>
-
-          </form>
-
+          <span className="topbar-pill">Recruitment Dashboard</span>
         </div>
+      </header>
 
+      <main className="dashboard">
+        <section className="stats-strip" aria-label="Candidate summary">
+          <div className="stat-card">
+            <span>Total Candidates</span>
+            <strong>{candidates.length}</strong>
+          </div>
+          <div className="stat-card">
+            <span>Current Matches</span>
+            <strong>{matchedCandidates.length}</strong>
+          </div>
+          <div className="stat-card">
+            <span>Minimum Experience</span>
+            <strong>{matchData.minExperience || 0}y</strong>
+          </div>
+        </section>
 
-
-        {/* MATCH SECTION */}
-        <div className="bg-white rounded-3xl shadow-md p-6">
-
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-
-            <h2 className="text-3xl font-bold text-purple-700">
-              Matched Candidates
-            </h2>
-
-            <div className="flex gap-3">
-
-              <button
-                onClick={matchCandidates}
-                className="border-2 border-purple-600 text-purple-700 px-5 py-3 rounded-xl font-semibold hover:bg-purple-50"
-              >
-                Match Candidates
-              </button>
-
-              <button
-                onClick={getAIShortlist}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-5 py-3 rounded-xl font-semibold"
-              >
-                AI Shortlist
-              </button>
-
+        <section className="grid-layout">
+          <div className="panel">
+            <div className="panel-header">
+              <div className="panel-title">
+                <h2>Add Candidate</h2>
+                <p>Create a clean candidate profile for the shortlist pool.</p>
+              </div>
             </div>
+
+            <form className="panel-body" onSubmit={addCandidate}>
+              <div className="form-grid">
+                <div className="form-field">
+                  <label htmlFor="name">Name</label>
+                  <input
+                    id="name"
+                    type="text"
+                    name="name"
+                    placeholder="Aarav Sharma"
+                    value={formData.name}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="email">Email</label>
+                  <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    placeholder="aarav@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="skills">Skills</label>
+                  <input
+                    id="skills"
+                    type="text"
+                    name="skills"
+                    placeholder="React, Node.js, MongoDB"
+                    value={formData.skills}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="experience">Experience</label>
+                  <input
+                    id="experience"
+                    type="number"
+                    name="experience"
+                    placeholder="3"
+                    value={formData.experience}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-field full">
+                  <label htmlFor="bio">Candidate Bio</label>
+                  <textarea
+                    id="bio"
+                    name="bio"
+                    placeholder="Briefly summarize the candidate's background, projects, and strengths."
+                    rows="5"
+                    value={formData.bio}
+                    onChange={handleChange}
+                  ></textarea>
+                </div>
+              </div>
+
+              <button className="btn btn-primary" type="submit">
+                Add Candidate
+              </button>
+            </form>
           </div>
 
+          <div className="panel">
+            <div className="panel-header">
+              <div className="panel-title">
+                <h2>Match Candidates</h2>
+                <p>Filter profiles against required skills and experience.</p>
+              </div>
 
+              <div className="actions">
+                <button onClick={matchCandidates} className="btn btn-secondary" type="button">
+                  Match
+                </button>
+                <button onClick={getAIShortlist} className="btn btn-accent" type="button">
+                  AI Shortlist
+                </button>
+              </div>
+            </div>
 
-          <div className="space-y-4">
+            <div className="panel-body">
+              <div className="match-controls">
+                <div className="form-field">
+                  <label htmlFor="requiredSkills">Required Skills</label>
+                  <input
+                    id="requiredSkills"
+                    type="text"
+                    name="requiredSkills"
+                    placeholder="React, Express, SQL"
+                    value={matchData.requiredSkills}
+                    onChange={handleMatchChange}
+                  />
+                </div>
 
-            <input
-              type="text"
-              name="requiredSkills"
-              placeholder="Required Skills"
-              value={matchData.requiredSkills}
-              onChange={handleMatchChange}
-              className="w-full border border-gray-300 p-4 rounded-xl outline-none"
-            />
+                <div className="form-field">
+                  <label htmlFor="minExperience">Minimum Experience</label>
+                  <input
+                    id="minExperience"
+                    type="number"
+                    name="minExperience"
+                    placeholder="2"
+                    value={matchData.minExperience}
+                    onChange={handleMatchChange}
+                  />
+                </div>
+              </div>
 
-            <input
-              type="number"
-              name="minExperience"
-              placeholder="Minimum Experience"
-              value={matchData.minExperience}
-              onChange={handleMatchChange}
-              className="w-full border border-gray-300 p-4 rounded-xl outline-none"
-            />
+              <div className="scroll-area">
+                {matchedCandidates.length === 0 ? (
+                  <p className="empty-state">Matched candidates will appear here.</p>
+                ) : (
+                  <div className="result-list">
+                    {matchedCandidates.map((candidate, index) => (
+                      <article key={index} className="result-card">
+                        <div className="result-head">
+                          <div>
+                            <h3 className="candidate-name">{candidate.name}</h3>
+                            <p className="candidate-email">{candidate.email}</p>
+                          </div>
+                          <span className="score">{candidate.matchScore}</span>
+                        </div>
 
-          </div>
-
-
-
-          {/* MATCH RESULTS */}
-          <div className="mt-6 space-y-4 max-h-[350px] overflow-y-auto">
-
-            {matchedCandidates.map((candidate, index) => (
-
-              <div
-                key={index}
-                className="bg-gray-50 rounded-2xl p-5 border border-gray-200"
-              >
-
-                <div className="flex justify-between items-center mb-3">
-
-                  <div>
-
-                    <h3 className="text-xl font-bold">
-                      {candidate.name}
-                    </h3>
-
-                    <p className="text-gray-500">
-                      {candidate.email}
-                    </p>
-
+                        <div className="tag-row">
+                          {(candidate.matchedSkills || []).map((skill, idx) => (
+                            <span key={idx} className="tag">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </article>
+                    ))}
                   </div>
-
-                  <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full font-semibold">
-                    {candidate.matchScore}
-                  </span>
-
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-
-                  {candidate.matchedSkills.map((skill, idx) => (
-
-                    <span
-                      key={idx}
-                      className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm"
-                    >
-                      {skill}
-                    </span>
-
-                  ))}
-
-                </div>
-
+                )}
               </div>
-
-            ))}
-
+            </div>
           </div>
+        </section>
 
-        </div>
-
-      </div>
-
-
-
-      {/* BOTTOM SECTION */}
-      <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* ALL CANDIDATES */}
-        <div className="bg-white rounded-3xl shadow-md p-6">
-
-          <h2 className="text-3xl font-bold text-blue-700 mb-6">
-            All Candidates
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-            {candidates.map((candidate) => (
-
-              <div
-                key={candidate._id}
-                className="border border-gray-200 rounded-2xl p-5 hover:shadow-lg transition"
-              >
-
-                <div className="flex justify-between items-start mb-3">
-
-  <div>
-
-    <h3 className="text-xl font-bold">
-      {candidate.name}
-    </h3>
-
-  </div>
-
-  <div className="flex gap-2">
-
-    <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
-      {candidate.experience} yrs
-    </span>
-
-    <button
-      onClick={() => deleteCandidate(candidate._id)}
-      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
-    >
-      Delete
-    </button>
-
-  </div>
-
-</div>
-
-                <p className="text-gray-500 mb-3">
-                  {candidate.email}
-                </p>
-
-                <p className="text-gray-700 mb-4">
-                  {candidate.bio}
-                </p>
-
-                <div className="flex flex-wrap gap-2">
-
-                  {candidate.skills.map((skill, index) => (
-
-                    <span
-                      key={index}
-                      className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm"
-                    >
-                      {skill}
-                    </span>
-
-                  ))}
-
-                </div>
-
+        <section className="grid-layout">
+          <div className="panel">
+            <div className="panel-header">
+              <div className="panel-title">
+                <h2>All Candidates</h2>
+                <p>Review every profile currently available for shortlisting.</p>
               </div>
+            </div>
 
-            ))}
+            <div className="panel-body">
+              <div className="scroll-area tall">
+                {candidates.length === 0 ? (
+                  <p className="empty-state">No candidates found yet.</p>
+                ) : (
+                  <div className="card-grid">
+                    {candidates.map((candidate) => (
+                      <article key={candidate._id} className="candidate-card">
+                        <div className="card-head">
+                          <div>
+                            <h3 className="candidate-name">{candidate.name}</h3>
+                            <p className="candidate-email">{candidate.email}</p>
+                          </div>
 
+                          <div className="meta-actions">
+                            <span className="tag experience">{candidate.experience} yrs</span>
+                            <button
+                              onClick={() => deleteCandidate(candidate._id)}
+                              className="btn btn-danger"
+                              type="button"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+
+                        <p className="candidate-bio">{candidate.bio}</p>
+
+                        <div className="tag-row">
+                          {(candidate.skills || []).map((skill, index) => (
+                            <span key={index} className="tag skill">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-        </div>
+          <div className="panel">
+            <div className="panel-header">
+              <div className="panel-title">
+                <h2>AI Recommendation</h2>
+                <p>Generated shortlist notes based on the current match criteria.</p>
+              </div>
+            </div>
 
-
-
-        {/* AI RECOMMENDATION */}
-        <div className="bg-white rounded-3xl shadow-md p-6">
-
-          <h2 className="text-3xl font-bold text-purple-700 mb-6">
-            AI Recommendation
-          </h2>
-
-          <div className="border border-purple-200 rounded-2xl p-5 h-[500px] overflow-y-auto">
-
-            <pre className="whitespace-pre-wrap text-gray-700 leading-8 font-sans">
-              {aiResponse || "AI recommendation will appear here..."}
-            </pre>
-
+            <div className="panel-body">
+              <div className="ai-panel">
+                <pre className="ai-copy">
+                  {aiResponse || "AI recommendation will appear here after you run AI Shortlist."}
+                </pre>
+              </div>
+            </div>
           </div>
-
-        </div>
-
-      </div>
-
+        </section>
+      </main>
     </div>
   );
 }
