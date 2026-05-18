@@ -5,32 +5,87 @@ const router = express.Router();
 const Candidate = require("../models/Candidate");
 
 
-// ADD CANDIDATE
+
+// ADD EMPLOYEE
 router.post("/", async (req, res) => {
+
   try {
-    const candidate = new Candidate(req.body);
 
-    await candidate.save();
+    const employee = new Candidate({
+  name: req.body.name,
+  email: req.body.email,
+  department: req.body.department || "General",
+  skills: req.body.skills || [],
+  performanceScore: req.body.performanceScore || 0,
+  experience: req.body.experience || 0,
+});
 
-    res.status(201).json(candidate);
+    await employee.save();
+
+    res.status(201).json({
+      message: "Employee Added Successfully",
+      employee,
+    });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+
+  console.log("BACKEND ERROR:");
+  console.log(error);
+
+  res.status(500).json({
+    message: error.message,
+  });
   }
 });
 
 
-// GET ALL CANDIDATES
+
+
+// GET ALL EMPLOYEES
 router.get("/", async (req, res) => {
-  try {
-    const candidates = await Candidate.find();
 
-    res.json(candidates);
+  try {
+
+    const employees = await Candidate.find();
+
+    res.json(employees);
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    res.status(500).json({
+      message: error.message,
+    });
   }
 });
 
-// DELETE CANDIDATE
+
+
+
+// SEARCH EMPLOYEE BY DEPARTMENT
+router.get("/search", async (req, res) => {
+
+  try {
+
+    const { department } = req.query;
+
+    const employees = await Candidate.find({
+      department: department,
+    });
+
+    res.json(employees);
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+});
+
+
+
+
+// DELETE EMPLOYEE
 router.delete("/:id", async (req, res) => {
 
   try {
@@ -38,7 +93,7 @@ router.delete("/:id", async (req, res) => {
     await Candidate.findByIdAndDelete(req.params.id);
 
     res.json({
-      message: "Candidate Deleted Successfully",
+      message: "Employee Deleted Successfully",
     });
 
   } catch (error) {
@@ -48,5 +103,7 @@ router.delete("/:id", async (req, res) => {
     });
   }
 });
+
+
 
 module.exports = router;

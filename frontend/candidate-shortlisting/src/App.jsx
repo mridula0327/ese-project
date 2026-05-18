@@ -4,43 +4,48 @@ import "./App.css";
 
 function App() {
 
-  // API BASE URL
-  const API = import.meta.env.VITE_API_URL;
+  // API
+  const API = "http://localhost:5000/api/candidates";
 
   // FORM DATA
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    department: "",
     skills: "",
+    performanceScore: "",
     experience: "",
-    bio: "",
   });
 
-  // CANDIDATES
-  const [candidates, setCandidates] = useState([]);
+  // EMPLOYEES
+  const [employees, setEmployees] = useState([]);
 
-  // MATCH DATA
+  // FILTER DATA
   const [matchData, setMatchData] = useState({
     requiredSkills: "",
     minExperience: "",
   });
 
-  // MATCHED
-  const [matchedCandidates, setMatchedCandidates] = useState([]);
+  // FILTERED EMPLOYEES
+  const [matchedEmployees, setMatchedEmployees] = useState([]);
 
   // AI RESPONSE
   const [aiResponse, setAiResponse] = useState("");
 
 
 
-  // FETCH CANDIDATES
-  const fetchCandidates = async () => {
+  // FETCH EMPLOYEES
+  const fetchEmployees = async () => {
 
     try {
 
       const response = await axios.get(API);
 
-      setCandidates(response.data);
+      setEmployees(
+        Array.isArray(response.data)
+          ? response.data
+          : []
+      );
 
     } catch (error) {
 
@@ -50,13 +55,12 @@ function App() {
 
 
 
-  // LOAD
+  // LOAD DATA
   useEffect(() => {
 
-    fetchCandidates();
+    fetchEmployees();
 
   }, []);
-
 
 
 
@@ -71,7 +75,7 @@ function App() {
 
 
 
-  // HANDLE MATCH
+  // HANDLE FILTER
   const handleMatchChange = (e) => {
 
     setMatchData({
@@ -82,48 +86,64 @@ function App() {
 
 
 
-  // ADD CANDIDATE
-  const addCandidate = async (e) => {
+  // ADD EMPLOYEE
+  const addEmployee = async (e) => {
 
     e.preventDefault();
 
     try {
 
-      const candidateData = {
+      const employeeData = {
         ...formData,
-        skills: formData.skills.split(","),
+
+        skills: formData.skills
+          .split(",")
+          .map((skill) => skill.trim()),
+
+        performanceScore: Number(formData.performanceScore),
+
+        experience: Number(formData.experience),
       };
 
-      await axios.post(API, candidateData);
+      await axios.post(API, employeeData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-      alert("Candidate Added");
+      alert("Employee Added Successfully");
 
       setFormData({
         name: "",
         email: "",
+        department: "",
         skills: "",
+        performanceScore: "",
         experience: "",
-        bio: "",
       });
 
-      setTimeout(() => {
-  fetchCandidates();
-}, 1500);
+      fetchEmployees();
 
     } catch (error) {
 
       console.log(error);
 
-      alert("Error Adding Candidate");
+      alert(
+        error?.response?.data?.message ||
+        error.message ||
+        "Error Adding Employee"
+      );
     }
   };
 
 
 
-  // MATCH CANDIDATES
-  const matchCandidates = () => {
+  // FILTER EMPLOYEES
+  const filterEmployees = () => {
 
-    const filtered = candidates.filter((candidate) => {
+    const filtered = employees.filter((employee) => {
+
+      const employeeSkills = employee.skills || [];
 
       const skillMatch =
         matchData.requiredSkills === ""
@@ -132,40 +152,70 @@ function App() {
               .toLowerCase()
               .split(",")
               .some((skill) =>
-                candidate.skills.join(" ").toLowerCase().includes(skill.trim())
+                employeeSkills
+                  .join(" ")
+                  .toLowerCase()
+                  .includes(skill.trim())
               );
 
       const experienceMatch =
-        Number(candidate.experience) >=
+        Number(employee.experience || 0) >=
         Number(matchData.minExperience || 0);
 
       return skillMatch && experienceMatch;
     });
 
-    setMatchedCandidates(filtered);
+    setMatchedEmployees(filtered);
   };
 
 
 
-  // AI SHORTLIST
-  const getAIShortlist = () => {
+  // AI RECOMMENDATION
+  const getAIRecommendation = () => {
 
-    if (matchedCandidates.length === 0) {
+    if (matchedEmployees.length === 0) {
 
       setAiResponse(
-        "No matched candidates found. Please run candidate matching first."
+        "No employees matched. Please run analytics first."
       );
 
       return;
     }
 
-    const text = matchedCandidates
+    const rankedEmployees = [...matchedEmployees].sort(
+      (a, b) =>
+        Number(b.performanceScore || 0) -
+        Number(a.performanceScore || 0)
+    );
+
+    const text = rankedEmployees
       .map(
-        (candidate, index) =>
-          `${index + 1}. ${candidate.name}
-Skills: ${candidate.skills.join(", ")}
-Experience: ${candidate.experience} years
-Bio: ${candidate.bio}
+        (employee, index) => `
+Rank ${index + 1}
+
+Employee: ${employee.name || "N/A"}
+
+Department: ${employee.department || "N/A"}
+
+Skills:
+${(employee.skills || []).join(", ")}
+
+Performance Score:
+${employee.performanceScore || 0}
+
+Experience:
+${employee.experience || 0} years
+
+AI Recommendation:
+${
+  Number(employee.performanceScore || 0) >= 85
+    ? "Eligible for Promotion"
+    : Number(employee.performanceScore || 0) >= 60
+    ? "Recommended for Skill Enhancement Training"
+    : "Needs Performance Improvement"
+}
+
+---------------------------------------
 `
       )
       .join("\n");
@@ -175,16 +225,16 @@ Bio: ${candidate.bio}
 
 
 
-  // DELETE
-  const deleteCandidate = async (id) => {
+  // DELETE EMPLOYEE
+  const deleteEmployee = async (id) => {
 
     try {
 
       await axios.delete(`${API}/${id}`);
 
-      alert("Candidate Deleted");
+      alert("Employee Deleted");
 
-      fetchCandidates();
+      fetchEmployees();
 
     } catch (error) {
 
@@ -207,15 +257,17 @@ Bio: ${candidate.bio}
           <div className="brand">
 
             <span className="brand-mark">
-              CS
+              AI
             </span>
 
             <div>
 
-              <h1>Candidate Shortlisting System</h1>
+              <h1>
+                AI Employee Performance Analytics System
+              </h1>
 
               <p>
-                Manage candidates, match skills, and review AI recommendations.
+                Analyze employee performance and generate AI recommendations.
               </p>
 
             </div>
@@ -223,7 +275,7 @@ Bio: ${candidate.bio}
           </div>
 
           <span className="topbar-pill">
-            Recruitment Dashboard
+            HR Analytics Dashboard
           </span>
 
         </div>
@@ -239,13 +291,13 @@ Bio: ${candidate.bio}
         <section className="stats-strip">
 
           <div className="stat-card">
-            <span>Total Candidates</span>
-            <strong>{candidates.length}</strong>
+            <span>Total Employees</span>
+            <strong>{employees.length}</strong>
           </div>
 
           <div className="stat-card">
-            <span>Matched Candidates</span>
-            <strong>{matchedCandidates.length}</strong>
+            <span>Filtered Employees</span>
+            <strong>{matchedEmployees.length}</strong>
           </div>
 
           <div className="stat-card">
@@ -260,17 +312,17 @@ Bio: ${candidate.bio}
         {/* TOP GRID */}
         <section className="grid-layout">
 
-          {/* ADD PANEL */}
+          {/* ADD EMPLOYEE */}
           <div className="panel">
 
             <div className="panel-header">
 
               <div className="panel-title">
 
-                <h2>Add Candidate</h2>
+                <h2>Add Employee</h2>
 
                 <p>
-                  Add professional candidate profiles.
+                  Register employee performance details.
                 </p>
 
               </div>
@@ -279,7 +331,10 @@ Bio: ${candidate.bio}
 
 
 
-            <form className="panel-body" onSubmit={addCandidate}>
+            <form
+              className="panel-body"
+              onSubmit={addEmployee}
+            >
 
               <div className="form-grid">
 
@@ -317,6 +372,22 @@ Bio: ${candidate.bio}
 
                 <div className="form-field">
 
+                  <label>Department</label>
+
+                  <input
+                    type="text"
+                    name="department"
+                    value={formData.department}
+                    onChange={handleChange}
+                    placeholder="Development"
+                  />
+
+                </div>
+
+
+
+                <div className="form-field">
+
                   <label>Skills</label>
 
                   <input
@@ -333,6 +404,22 @@ Bio: ${candidate.bio}
 
                 <div className="form-field">
 
+                  <label>Performance Score</label>
+
+                  <input
+                    type="number"
+                    name="performanceScore"
+                    value={formData.performanceScore}
+                    onChange={handleChange}
+                    placeholder="85"
+                  />
+
+                </div>
+
+
+
+                <div className="form-field">
+
                   <label>Experience</label>
 
                   <input
@@ -340,24 +427,8 @@ Bio: ${candidate.bio}
                     name="experience"
                     value={formData.experience}
                     onChange={handleChange}
-                    placeholder="2"
+                    placeholder="3"
                   />
-
-                </div>
-
-
-
-                <div className="form-field full">
-
-                  <label>Bio</label>
-
-                  <textarea
-                    name="bio"
-                    rows="5"
-                    value={formData.bio}
-                    onChange={handleChange}
-                    placeholder="Candidate background..."
-                  ></textarea>
 
                 </div>
 
@@ -365,8 +436,11 @@ Bio: ${candidate.bio}
 
 
 
-              <button type="submit" className="btn btn-primary">
-                Add Candidate
+              <button
+                type="submit"
+                className="btn btn-primary"
+              >
+                Add Employee
               </button>
 
             </form>
@@ -375,17 +449,17 @@ Bio: ${candidate.bio}
 
 
 
-          {/* MATCH PANEL */}
+          {/* ANALYTICS */}
           <div className="panel">
 
             <div className="panel-header">
 
               <div className="panel-title">
 
-                <h2>Match Candidates</h2>
+                <h2>Employee Analytics</h2>
 
                 <p>
-                  Match profiles according to required skills.
+                  Filter employees using skills and experience.
                 </p>
 
               </div>
@@ -397,17 +471,17 @@ Bio: ${candidate.bio}
                 <button
                   className="btn btn-secondary"
                   type="button"
-                  onClick={matchCandidates}
+                  onClick={filterEmployees}
                 >
-                  Match
+                  Analyze
                 </button>
 
                 <button
                   className="btn btn-accent"
                   type="button"
-                  onClick={getAIShortlist}
+                  onClick={getAIRecommendation}
                 >
-                  AI Shortlist
+                  AI Recommendation
                 </button>
 
               </div>
@@ -456,20 +530,20 @@ Bio: ${candidate.bio}
 
               <div className="scroll-area">
 
-                {matchedCandidates.length === 0 ? (
+                {matchedEmployees.length === 0 ? (
 
                   <p className="empty-state">
-                    No matched candidates.
+                    No employees found.
                   </p>
 
                 ) : (
 
                   <div className="card-grid">
 
-                    {matchedCandidates.map((candidate) => (
+                    {matchedEmployees.map((employee) => (
 
                       <div
-                        key={candidate._id}
+                        key={employee._id}
                         className="result-card"
                       >
 
@@ -478,14 +552,18 @@ Bio: ${candidate.bio}
                           <div>
 
                             <h3 className="candidate-name">
-                              {candidate.name}
+                              {employee.name || "N/A"}
                             </h3>
 
                             <p className="candidate-email">
-                              {candidate.email}
+                              {employee.email || "N/A"}
                             </p>
 
                           </div>
+
+                          <span className="score">
+                            {employee.performanceScore || 0}
+                          </span>
 
                         </div>
 
@@ -493,16 +571,18 @@ Bio: ${candidate.bio}
 
                         <div className="tag-row">
 
-                          {candidate.skills.map((skill, index) => (
+                          {(employee.skills || []).map(
+                            (skill, index) => (
 
-                            <span
-                              key={index}
-                              className="tag skill"
-                            >
-                              {skill}
-                            </span>
+                              <span
+                                key={index}
+                                className="tag skill"
+                              >
+                                {skill}
+                              </span>
 
-                          ))}
+                            )
+                          )}
 
                         </div>
 
@@ -527,17 +607,17 @@ Bio: ${candidate.bio}
         {/* BOTTOM */}
         <section className="grid-layout">
 
-          {/* ALL CANDIDATES */}
+          {/* ALL EMPLOYEES */}
           <div className="panel">
 
             <div className="panel-header">
 
               <div className="panel-title">
 
-                <h2>All Candidates</h2>
+                <h2>All Employees</h2>
 
                 <p>
-                  Complete candidate list.
+                  Employee performance records.
                 </p>
 
               </div>
@@ -552,10 +632,10 @@ Bio: ${candidate.bio}
 
                 <div className="card-grid">
 
-                  {candidates.map((candidate) => (
+                  {employees.map((employee) => (
 
                     <div
-                      key={candidate._id}
+                      key={employee._id}
                       className="candidate-card"
                     >
 
@@ -564,11 +644,11 @@ Bio: ${candidate.bio}
                         <div>
 
                           <h3 className="candidate-name">
-                            {candidate.name}
+                            {employee.name || "N/A"}
                           </h3>
 
                           <p className="candidate-email">
-                            {candidate.email}
+                            {employee.email || "N/A"}
                           </p>
 
                         </div>
@@ -578,14 +658,14 @@ Bio: ${candidate.bio}
                         <div className="meta-actions">
 
                           <span className="tag experience">
-                            {candidate.experience} yrs
+                            {employee.experience || 0} yrs
                           </span>
 
                           <button
                             className="btn btn-danger"
                             type="button"
                             onClick={() =>
-                              deleteCandidate(candidate._id)
+                              deleteEmployee(employee._id)
                             }
                           >
                             Delete
@@ -598,23 +678,35 @@ Bio: ${candidate.bio}
 
 
                       <p className="candidate-bio">
-                        {candidate.bio}
+
+                        Department:
+                        {" "}
+                        {employee.department || "N/A"}
+
+                        <br /><br />
+
+                        Performance Score:
+                        {" "}
+                        {employee.performanceScore || 0}
+
                       </p>
 
 
 
                       <div className="tag-row">
 
-                        {candidate.skills.map((skill, index) => (
+                        {(employee.skills || []).map(
+                          (skill, index) => (
 
-                          <span
-                            key={index}
-                            className="tag skill"
-                          >
-                            {skill}
-                          </span>
+                            <span
+                              key={index}
+                              className="tag skill"
+                            >
+                              {skill}
+                            </span>
 
-                        ))}
+                          )
+                        )}
 
                       </div>
 
@@ -632,7 +724,7 @@ Bio: ${candidate.bio}
 
 
 
-          {/* AI */}
+          {/* AI PANEL */}
           <div className="panel">
 
             <div className="panel-header">
@@ -642,7 +734,7 @@ Bio: ${candidate.bio}
                 <h2>AI Recommendation</h2>
 
                 <p>
-                  AI generated shortlist.
+                  AI-generated promotion and training suggestions.
                 </p>
 
               </div>
@@ -658,7 +750,7 @@ Bio: ${candidate.bio}
                 <pre className="ai-copy">
 
                   {aiResponse ||
-                    "AI recommendation will appear here."}
+                    "AI recommendations will appear here."}
 
                 </pre>
 

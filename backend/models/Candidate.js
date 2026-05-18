@@ -3,26 +3,30 @@ const mongoose = require("mongoose");
 const CandidateSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
   },
 
   email: {
     type: String,
-    required: true,
+  },
+
+  department: {
+    type: String,
+    default: "General",
   },
 
   skills: {
     type: [String],
-    required: true,
+    default: [],
+  },
+
+  performanceScore: {
+    type: Number,
+    default: 0,
   },
 
   experience: {
     type: Number,
-    required: true,
-  },
-
-  bio: {
-    type: String,
+    default: 0,
   },
 
   createdAt: {
