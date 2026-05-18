@@ -5,7 +5,7 @@ import "./App.css";
 function App() {
 
   // API
-  const API = "http://localhost:5000/api/candidates";
+  const API = "https://ese-project-rwau.onrender.com/api/candidates";
 
   // FORM DATA
   const [formData, setFormData] = useState({
